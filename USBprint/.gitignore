@@ -1,0 +1,10 @@
+*.log
+*.obj
+*.pch
+*.tlog
+*.idb
+*.pdb
+*.lastbuildstate
+*.sdf
+*/Debug/*
+*/Release/*
