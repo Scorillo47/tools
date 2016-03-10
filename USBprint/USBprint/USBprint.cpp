@@ -42,7 +42,7 @@ char HexToChar(char hex)
 	if ((hex >= 0) && (hex < 10))
 		return hex + '0';
 	else if ((hex >= 10) && (hex < 16))
-		return hex + 'A';
+		return hex - 10 + 'A';
 	else
 		return '?';
 }
@@ -89,6 +89,8 @@ void Print1284DeviceID(HANDLE deviceHandle)
 
 void ProcessCommand(HANDLE usbHandle)
 {
+	static char s_byteVal = 0;
+
 	while (true)
 	{
 		printf("\nEnter command [r/w/q] > ");
@@ -98,7 +100,7 @@ void ProcessCommand(HANDLE usbHandle)
 		case 'r':
 			printf("\nread\n");
 			{
-				const size_t dataSize = 64;
+				const size_t dataSize = 1;
 				char data[dataSize] = {};
 				DWORD dwBytesRead = 0;
 				ReadFile(usbHandle, data, dataSize, &dwBytesRead, nullptr);
@@ -107,7 +109,7 @@ void ProcessCommand(HANDLE usbHandle)
 					printf("- Data read: \n");
 					for (int i = 0; i < (int)dwBytesRead; i++)
 					{
-						printf("%c%c ", HexToChar(data[i] >> 4), HexToChar(data[i] % 0xF));
+						printf("0x%c%c ", HexToChar(data[i] >> 4), HexToChar(data[i] % 0xF));
 
 						if (i > 0 && (i % 8) == 0)
 							printf("\n");
@@ -122,17 +124,17 @@ void ProcessCommand(HANDLE usbHandle)
 		case 'w':
 			printf("\nwrite\n");
 			{
-				const size_t dataSize = 64;
+				const size_t dataSize = 1;
 				char data[dataSize] = {};
 				for (int i = 0; i < dataSize; i++)
 				{
-					data[i] = i;
+					data[i] = s_byteVal++;
 				}
 
 				DWORD dwBytesWritten = 0;
 				WriteFile(usbHandle, data, dataSize, &dwBytesWritten, nullptr);
 				if (dwBytesWritten > 0)
-					printf("- Data written = %c%c\n", HexToChar(data[0] >> 4), HexToChar(data[0] % 0xF));
+					printf("- Data written = 0x%c%c\n", HexToChar(data[0] >> 4), HexToChar(data[0] % 0xF));
 				else
 					printf("- Data written attempt: no bytes (GLE = %d)\n", GetLastError());
 			}
@@ -140,7 +142,7 @@ void ProcessCommand(HANDLE usbHandle)
 
 		case 'q':
 			printf("\nquit\n");
-			break;
+			return;
 		}
 	}
 }
