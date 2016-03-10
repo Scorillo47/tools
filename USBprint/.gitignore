@@ -6,5 +6,8 @@
 *.pdb
 *.lastbuildstate
 *.sdf
-*/Debug/*
-*/Release/*
+**/Debug/
+**/Release/
+*.opensdf
+*.suo
+**/ipch/

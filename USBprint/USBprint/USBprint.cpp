@@ -87,6 +87,65 @@ void Print1284DeviceID(HANDLE deviceHandle)
 }
 
 
+void ProcessCommand(HANDLE usbHandle)
+{
+	while (true)
+	{
+		printf("\nEnter command [r/w/q] > ");
+		char c = (char)getchar();
+		switch (c)
+		{
+		case 'r':
+			printf("\nread\n");
+			{
+				const size_t dataSize = 64;
+				char data[dataSize] = {};
+				DWORD dwBytesRead = 0;
+				ReadFile(usbHandle, data, dataSize, &dwBytesRead, nullptr);
+				if (dwBytesRead > 0)
+				{
+					printf("- Data read: \n");
+					for (int i = 0; i < (int)dwBytesRead; i++)
+					{
+						printf("%c%c ", HexToChar(data[i] >> 4), HexToChar(data[i] % 0xF));
+
+						if (i > 0 && (i % 8) == 0)
+							printf("\n");
+					}
+					printf("\n");
+				}
+				else
+					printf("- Data read attempt: no bytes (GLE = %d)\n", GetLastError());
+			}
+			break;
+
+		case 'w':
+			printf("\nwrite\n");
+			{
+				const size_t dataSize = 64;
+				char data[dataSize] = {};
+				for (int i = 0; i < dataSize; i++)
+				{
+					data[i] = i;
+				}
+
+				DWORD dwBytesWritten = 0;
+				WriteFile(usbHandle, data, dataSize, &dwBytesWritten, nullptr);
+				if (dwBytesWritten > 0)
+					printf("- Data written = %c%c\n", HexToChar(data[0] >> 4), HexToChar(data[0] % 0xF));
+				else
+					printf("- Data written attempt: no bytes (GLE = %d)\n", GetLastError());
+			}
+			break;
+
+		case 'q':
+			printf("\nquit\n");
+			break;
+		}
+	}
+}
+
+
 
 void EnumerateParallelUSB()
 {
@@ -164,31 +223,14 @@ void EnumerateParallelUSB()
 			printf("- handle = %p (GLE = %d)\n", usbHandle, GetLastError());
 			if (usbHandle != INVALID_HANDLE_VALUE) 
 			{
+				/* 
 				// Get the device ID
 				PrintParallelDeviceID(usbHandle);
 				Print1284DeviceID(usbHandle);
-
-
-				/* Now perform all the writing to the device ie.
-				* while (some condition) WriteFile(usbHandle, buf, size, &bytes_written);
 				*/
-				/*
-				const size_t dataSize = 1;
-				char data[dataSize] = {};
-				DWORD dwBytesRead = 0;
-				ReadFile(usbHandle, data, dataSize, &dwBytesRead, nullptr);
-				if (dwBytesRead > 0)
-					printf("- Data read = %c%c\n", HexToChar(data[0] >> 4), HexToChar(data[0] % 0xF));
-				else
-					printf("- Data read attempt: no bytes (GLE = %d)\n", GetLastError());
 
-				DWORD dwBytesWritten = 0;
-				WriteFile(usbHandle, data, dataSize, &dwBytesWritten, nullptr);
-				if (dwBytesWritten > 0)
-					printf("- Data written = %c%c\n", HexToChar(data[0] >> 4), HexToChar(data[0] % 0xF));
-				else
-					printf("- Data written attempt: no bytes (GLE = %d)\n", GetLastError());
-				*/
+				ProcessCommand(usbHandle);
+
 				CloseHandle(usbHandle);
 			}
 			printf("Closing %s ... \n", interfacename);
